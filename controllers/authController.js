@@ -3,6 +3,7 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 
 export const registerUser = async (req, res) => {
+    console.log("Controller - Registering user");
   try {
     const user = await User.create(req.body);
     res.status(201).json(user);
@@ -12,6 +13,7 @@ export const registerUser = async (req, res) => {
 };
 
 export const loginUser = async (req, res) => {
+  console.log("Controller - Logging in user"); 
   const { username, password } = req.body;
   const user = await User.findOne({ username });
   if (user && (await bcrypt.compare(password, user.password))) {
