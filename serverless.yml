@@ -1,0 +1,44 @@
+service: expense-tracker
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  environment:
+    MONGO_URI: ${ssm:/aws/reference/secretsmanager/MONGO_URI~true}
+    JWT_SECRET: ${ssm:/aws/reference/secretsmanager/JWT_SECRET~true}
+
+functions:
+  registerUser:
+    handler: controllers/authController.registerUser
+    events:
+      - http:
+          path: auth/register
+          method: post
+
+  loginUser:
+    handler: controllers/authController.loginUser
+    events:
+      - http:
+          path: auth/login
+          method: post
+
+  addExpense:
+    handler: controllers/expenseController.addExpense
+    events:
+      - http:
+          path: expenses
+          method: post
+
+  getExpenses:
+    handler: controllers/expenseController.getExpenses
+    events:
+      - http:
+          path: expenses
+          method: get
+
+  deleteExpense:
+    handler: controllers/expenseController.deleteExpense
+    events:
+      - http:
+          path: expenses/{id}
+          method: delete
