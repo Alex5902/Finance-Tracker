@@ -4,7 +4,6 @@ import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import authRoutes from "./routes/auth.js";
 import expenseRoutes from "./routes/expense.js";
-import express from "express";
 
 if (process.env.NODE_ENV === "test") {
     dotenv.config({ path: ".env.test" });

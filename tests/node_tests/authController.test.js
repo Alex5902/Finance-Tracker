@@ -1,7 +1,7 @@
 const request = require("supertest");
 const mongoose = require("mongoose");
-const User = require("../../../models/User.js").default; 
-const app = require("../../../app").default;
+const User = require("../../models/User.js").default; 
+const app = require("../../app.js").default;
 
 describe("User Authentication", () => {
   
