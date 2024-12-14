@@ -1,23 +1,22 @@
 import mongoose from "mongoose";
 
-let isConnected;
+let isConnected = false;
 
 export const connectToDatabase = async () => {
   if (isConnected) {
-    console.log("=> using existing database connection");
+    console.log("Using existing database connection");
     return;
   }
 
-  console.log("=> using new database connection");
   try {
+    console.log("Connecting to new database connection");
     const db = await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000,
     });
-    isConnected = db.connections[0].readyState;
-    console.log("=> database connected");
+    isConnected = db.connections[0].readyState === 1; 
+    console.log("Database connected successfully");
   } catch (error) {
-    console.error("=> database connection error", error);
+    console.error("Database connection failed", error);
     throw error;
   }
 };

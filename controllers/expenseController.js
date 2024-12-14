@@ -5,7 +5,7 @@ export const addExpense = async (event) => {
   try {
     await connectToDatabase();
     const body = JSON.parse(event.body);
-    const userId = event.requestContext.authorizer.principalId;
+    const userId = event.requestContext.authorizer.userId;
 
     const newExpense = await Expense.create({
       user: userId,
@@ -28,10 +28,10 @@ export const addExpense = async (event) => {
   }
 };
 
-export const getExpenses = async (event) => {
+export const getExpense = async (event) => {
   try {
     await connectToDatabase();
-    const userId = event.requestContext.authorizer.principalId;
+    const userId = event.requestContext.authorizer.userId;
     const expenses = await Expense.find({ user: userId });
 
     return {
@@ -50,9 +50,18 @@ export const getExpenses = async (event) => {
 export const deleteExpense = async (event) => {
   try {
     await connectToDatabase();
+    const userId = event.requestContext.authorizer.userId;
     const expenseId = event.pathParameters.id;
 
-    await Expense.findByIdAndDelete(expenseId);
+    const expense = await Expense.findOneAndDelete({ _id: expenseId, user: userId });
+
+    if (!expense) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ message: "Expense not found" }),
+      };
+    }
+
     return {
       statusCode: 200,
       body: JSON.stringify({ message: "Expense deleted successfully" }),
@@ -65,4 +74,5 @@ export const deleteExpense = async (event) => {
     };
   }
 };
+
 
