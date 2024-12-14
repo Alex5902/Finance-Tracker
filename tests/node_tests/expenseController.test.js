@@ -1,8 +1,8 @@
 const request = require("supertest");
 const mongoose = require("mongoose");
-const app = require("../app").default;
-const User = require("../models/User.js").default;
-const Expense = require("../models/Expense.js").default;
+const app = require("../../app").default;
+const User = require("../../models/User.js").default;
+const Expense = require("../../models/Expense.js").default;
 
 describe("Expense Management", () => {
   let token;
