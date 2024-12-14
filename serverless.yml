@@ -3,13 +3,39 @@ service: expense-tracker
 provider:
   name: aws
   runtime: nodejs22.x
+  region: ap-northeast-1
   environment:
-    MONGO_URI: ${ssm:/aws/reference/secretsmanager/MONGO_URI~true}
-    JWT_SECRET: ${ssm:/aws/reference/secretsmanager/JWT_SECRET~true}
+    MONGO_URI: ${ssm:/myproject/MONGO_URI} 
+    JWT_SECRET: ${ssm:/myproject/JWT_SECRET}
+  iamRoleStatements:
+  - Effect: "Allow"
+    Action:
+      - "ssm:GetParameter"
+    Resource: 
+      - "arn:aws:ssm:ap-northeast-1:*:parameter/myproject/*" 
+
+package:
+  individually: true
+  exclude:
+    - node_modules/aws-sdk/**
+    - node_modules/.bin/**
+    - .git/**
+    - .vscode/**
+    - .DS_Store
+    - .env
+    - .env.test
+    - tests/**
+    - coverage/**
+    - logs/**
 
 functions:
+  customAuthorizer:
+    handler: middleware/authMiddleware.main
+
   registerUser:
     handler: controllers/authController.registerUser
+    memorySize: 1024
+    timeout: 29
     events:
       - http:
           path: auth/register
@@ -17,6 +43,8 @@ functions:
 
   loginUser:
     handler: controllers/authController.loginUser
+    memorySize: 1024
+    timeout: 29
     events:
       - http:
           path: auth/login
@@ -24,21 +52,36 @@ functions:
 
   addExpense:
     handler: controllers/expenseController.addExpense
+    memorySize: 1024
+    timeout: 29
     events:
       - http:
           path: expenses
           method: post
+          authorizer:
+            name: customAuthorizer
+            type: TOKEN
 
   getExpenses:
-    handler: controllers/expenseController.getExpenses
+    handler: controllers/expenseController.getExpense
+    memorySize: 1024
+    timeout: 29
     events:
       - http:
           path: expenses
           method: get
+          authorizer:
+            name: customAuthorizer
+            type: TOKEN
 
   deleteExpense:
     handler: controllers/expenseController.deleteExpense
+    memorySize: 1024
+    timeout: 29
     events:
       - http:
           path: expenses/{id}
           method: delete
+          authorizer:
+            name: customAuthorizer
+            type: TOKEN
