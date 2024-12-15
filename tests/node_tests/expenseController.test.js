@@ -1,35 +1,45 @@
-const request = require("supertest");
-const mongoose = require("mongoose");
-const app = require("../../app.js").default;
-const User = require("../../models/User.js").default;
-const Expense = require("../../models/Expense.js").default;
+import mongoose from "mongoose";
+import User from "../../models/User.js";
+import Expense from "../../models/Expense.js";
+import { registerUser, loginUser } from "../../controllers/authController.js";
+import { addExpense, getExpense, deleteExpense } from "../../controllers/expenseController.js";
 
-describe("Expense Management", () => {
+jest.setTimeout(30000);
+
+describe("Expense Management (Lambda Style)", () => {
   let token;
+  let userId;
   let expenseId;
 
   beforeAll(async () => {
-    // Clear users and expenses before tests
-    await User.deleteMany({});
-    await Expense.deleteMany({});
+    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connection.dropDatabase();
 
-    // Register a new user
-    await request(app).post("/api/auth/register").send({
-      username: "testuser",
-      password: "password123",
-    });
+    // Register a new user different from authController.test.js
+    const registerEvent = {
+      body: JSON.stringify({
+        username: "testuser_expense",
+        password: "password123"
+      })
+    };
+    const regResponse = await registerUser(registerEvent);
+    expect(regResponse.statusCode).toBe(201);
 
-    // Log in the user to get a token
-    const res = await request(app).post("/api/auth/login").send({
-      username: "testuser",
-      password: "password123",
-    });
-    token = res.body.token;
+    // Login the user to get a token
+    const loginEvent = {
+      body: JSON.stringify({
+        username: "testuser_expense",
+        password: "password123"
+      })
+    };
+    const loginResponse = await loginUser(loginEvent);
+    const loginBody = JSON.parse(loginResponse.body);
+    token = loginBody.token;
+    expect(token).toBeDefined();
 
-    // Ensure token is obtained
-    if (!token) {
-      throw new Error("Failed to obtain authentication token");
-    }
+    // Fetch user from DB to get userId
+    const user = await User.findOne({ username: "testuser_expense" });
+    userId = user._id.toString();
   });
 
   afterAll(async () => {
@@ -37,48 +47,75 @@ describe("Expense Management", () => {
   });
 
   test("should add a new expense", async () => {
-    const response = await request(app)
-      .post("/api/expense")
-      .set("Authorization", `Bearer ${token}`)
-      .send({
+    const event = {
+      body: JSON.stringify({
         description: "Groceries",
         category: "Food",
-        amount: 50,
-      });
-    expect(response.statusCode).toBe(201);
-    expect(response.body).toHaveProperty("_id");
-    expect(response.body.amount).toBe(50);
+        amount: 50
+      }),
+      requestContext: {
+        authorizer: {
+          userId: userId
+        }
+      }
+    };
 
-    expenseId = response.body._id;
+    const response = await addExpense(event);
+    const body = JSON.parse(response.body);
+
+    expect(response.statusCode).toBe(201);
+    expect(body.expense).toHaveProperty("_id");
+    expect(body.expense.amount).toBe(50);
+    expenseId = body.expense._id;
   });
 
   test("should fetch all expenses", async () => {
-    const response = await request(app)
-      .get("/api/expense")
-      .set("Authorization", `Bearer ${token}`);
-    expect(response.statusCode).toBe(200);
-    expect(Array.isArray(response.body)).toBe(true);
+    const event = {
+      requestContext: {
+        authorizer: {
+          userId: userId
+        }
+      }
+    };
 
-    // Optionally, you can check that the array contains the expense we added
-    expect(response.body.length).toBeGreaterThan(0);
-    expect(response.body.some(expense => expense._id === expenseId)).toBe(true);
+    const response = await getExpense(event);
+    const body = JSON.parse(response.body);
+
+    expect(response.statusCode).toBe(200);
+    expect(Array.isArray(body)).toBe(true);
+    expect(body.length).toBeGreaterThan(0);
+    expect(body.some(exp => exp._id === expenseId)).toBe(true);
   });
 
   test("should delete an expense", async () => {
-    // Ensure we have an expense ID to delete
-    expect(expenseId).toBeDefined();
+    const event = {
+      requestContext: {
+        authorizer: {
+          userId: userId
+        }
+      },
+      pathParameters: {
+        id: expenseId
+      }
+    };
 
-    const response = await request(app)
-      .delete(`/api/expense/${expenseId}`)
-      .set("Authorization", `Bearer ${token}`);
+    const response = await deleteExpense(event);
+    const body = JSON.parse(response.body);
+
     expect(response.statusCode).toBe(200);
-    expect(response.body).toHaveProperty("message", "Expense deleted");
+    expect(body.message).toBe("Expense deleted successfully");
 
-    // Verify that the expense no longer exists
-    const fetchResponse = await request(app)
-      .get("/api/expense")
-      .set("Authorization", `Bearer ${token}`);
+    const fetchEvent = {
+      requestContext: {
+        authorizer: {
+          userId: userId
+        }
+      }
+    };
+
+    const fetchResponse = await getExpense(fetchEvent);
+    const fetchBody = JSON.parse(fetchResponse.body);
     expect(fetchResponse.statusCode).toBe(200);
-    expect(fetchResponse.body.some(expense => expense._id === expenseId)).toBe(false);
+    expect(fetchBody.some(exp => exp._id === expenseId)).toBe(false);
   });
 });

@@ -6,7 +6,8 @@ import { connectToDatabase } from "../utils/db.js";
 export const registerUser = async (event) => {
   try {
     await connectToDatabase();
-    const body = JSON.parse(event.body);
+    // const body = JSON.parse(event.body);
+    const body = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
     const user = await User.create(body);
     return {
       statusCode: 201,
