@@ -17,9 +17,37 @@ The aim of this project was to create a fully serverless, secure and scalable RE
 **Automated Testing & Deployment**: Unit tests run in CI pipeline, ensuring code integrity before automatic deployment to AWS
 
 <table>
-    <td><img src="images/expenseAdd.png" alt="Addin an Expense" width="500"></td>
-    <td><img src="images/expenseDelete.png" alt="Deleting an Expense" width="500"></td>
-    <td><img src="images/expenseGet.png" alt="Getting an Expense" width="500"></td>
-    <td><img src="images/userRegister.png" alt="Register User" width="500"></td>
-    <td><img src="images/userLogIn.png" alt="Log-In User" width="500"></td>
+  <tr>
+    <td>
+      <figure>
+        <img src="images/expenseAdd.png" alt="Adding an Expense" width="500">
+        <figcaption>Adding a New Expense</figcaption>
+      </figure>
+    </td>
+    <td>
+      <figure>
+        <img src="images/expenseDelete.png" alt="Deleting an Expense" width="500">
+        <figcaption>Deleting an Expense</figcaption>
+      </figure>
+    </td>
+    <td>
+      <figure>
+        <img src="images/expenseGet.png" alt="Getting an Expense" width="500">
+        <figcaption>Retrieving Expenses</figcaption>
+      </figure>
+    </td>
+    <td>
+      <figure>
+        <img src="images/userRegister.png" alt="Register User" width="500">
+        <figcaption>Registering a New User</figcaption>
+      </figure>
+    </td>
+    <td>
+      <figure>
+        <img src="images/userLogIn.png" alt="Log-In User" width="500">
+        <figcaption>User Login</figcaption>
+      </figure>
+    </td>
+  </tr>
 </table>
+
