@@ -1,3 +1,5 @@
+org: alex5902
+app: finance-tracker
 service: expense-tracker
 
 provider:
